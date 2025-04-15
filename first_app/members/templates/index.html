@@ -1,0 +1,15 @@
+{% extends "master.html" %}
+
+{% block title %}
+My Frist App
+{% endblock %}
+
+
+{% block content %}
+<div class="main">
+    <h1>My First App</h1>
+    <h3>Members</h3>
+    <p>Check out all our <a href="members/">Members</a></p>
+    <p>Logout <a href="{% url 'logout' %}">Here</a></p>
+</div>
+{% endblock %}

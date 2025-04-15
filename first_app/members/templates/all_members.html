@@ -1,0 +1,24 @@
+{% extends "master.html" %}
+
+{% block title %}
+My Frist App - All Members
+{% endblock %}
+
+
+{% block content %}
+<div class="mycard">
+    <h1>All Members</h1>
+    <ul>
+        {% for x in allmembers %}
+        <li onclick="window.location='details/{{ x.slug }}'">
+            {% with fun='Member' %}
+            {{fun}}
+            {% endwith %}
+            {{ x.fname }} {{ x.lname }}
+        </li>
+        {% empty %}
+        <li>No Members</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

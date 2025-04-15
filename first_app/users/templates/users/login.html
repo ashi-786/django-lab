@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>Title</title>
+        <!-- Required meta tags -->
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+    </head>
+
+    <body>
+      <h3>Login to your account!</h3>  
+      <form action="" method="post" autocomplete="off">
+        {% csrf_token %}
+        {{loginform}}
+
+        <input type="submit" value="Login">
+      </form>
+      <p>If you don't have an account <a href="/register/">Create One</a></p>
+    </body>
+</html>

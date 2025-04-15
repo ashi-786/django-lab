@@ -1,0 +1,40 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Firts App - Test Page</title>
+    <!-- <link rel="stylesheet" href="{% static 'style.css' %}"> -->
+</head>
+
+<body>
+    <!-- <ul>
+        {% for x in allmembers reversed %}
+        <li>{{ x }}</li>
+        {% empty %}
+        <li>No Members</li>
+        {% endfor %}
+    </ul> -->
+    <table border='2' cellpadding="5" style="border-collapse: collapse;">
+        <tr>
+            <th>ID</th>
+            <th>Firstname</th>
+            <th>Lastname</th>
+            <th>Phone</th>
+            <th>Joined Date</th>
+        </tr>
+        {% for x in allmembers %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ x.fname }}</td>
+            <td>{{ x.lname }}</td>
+            <td>{{ x.phone }}</td>
+            <td>{{ x.joined_date }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+
+</html>
