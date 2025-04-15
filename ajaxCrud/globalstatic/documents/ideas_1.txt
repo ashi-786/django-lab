@@ -1,0 +1,32 @@
+
+Multiple Topical Articles:
+
+  Title: Korean Cuisine: Must-Try Dishes for Food Lovers
+  Keyword: Korean food recommendations
+  Summary: A guide to popular Korean dishes, including where to find authentic ingredients and recipes.
+
+  Title: The Joy of Making New Friends Abroad
+  Keyword: making friends abroad
+  Summary: An exploration of the unique experiences and challenges of forming friendships in a foreign country.
+
+
+Single Comprehensive Article:
+
+  Title: The Importance of Friendships for Mental Well-Being
+  Keyword: friendship and mental health
+  Summary: A comprehensive exploration of how friendships contribute to mental health, including personal anecdotes and expert insights.
+
+
+Featured Expert:
+
+  Title: Cultural Exchange: Insights from Expats Living in France
+  Keyword: expat cultural exchange
+  Summary: An article featuring insights from expatriates about their experiences and the cultural exchanges that enrich their lives in France.
+
+
+Q&A Format:
+
+  Title: How Can You Make New Friends in a New City?
+  Keyword: making friends in a new city
+  Summary: Answers to frequently asked questions about strategies and tips for meeting new people and building friendships in unfamiliar places.
+

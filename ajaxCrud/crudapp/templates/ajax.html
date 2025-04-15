@@ -1,0 +1,211 @@
+<script>
+    toastr.options = {
+        "closeButton": false,
+        "debug": false,
+        "newestOnTop": false,
+        "progressBar": false,
+        "positionClass": "toast-top-right",
+        "preventDuplicates": false,
+        "onclick": null,
+        "showDuration": "300",
+        "hideDuration": "1000",
+        "timeOut": "5000",
+        "extendedTimeOut": "1000",
+        "showEasing": "swing",
+        "hideEasing": "linear",
+        "showMethod": "fadeIn",
+        "hideMethod": "fadeOut"
+    }
+
+    $(document).ready(function () {
+        $(".btn-close").click(() => {
+            $("#addForm").trigger('reset')
+            $("#addForm").find(".img").html("")
+            $("#addForm").find(".file").html("")
+        })
+
+        function todolist(data) {
+            $('tbody').empty()
+            if (data.length > 0) {
+                data.forEach(todo => {
+                    let filename = todo.file ? todo.file.split('/').pop() : ""
+                    $('tbody').append(
+                    `<tr>
+                        <td class="px-3">${todo.name}</td>
+                        <td>${todo.status}</td>
+                        <td>${todo.type}</td>
+                        <td>
+                            ${todo.todo_img ?
+                            `<a href="/media/${todo.todo_img}" target="_blank">
+                                <img src="/media/${todo.todo_img}" alt="Todo Image" height="100" width="100">
+                            </a>`
+                            : `<span class="text-secondary">No Image</span>`}
+                        </td>
+                        <td>
+                            ${todo.file ?
+                            `<a href="/media/${todo.file}" class="text-dark text-decoration-none" target="_blank">
+                                <i class="fa-solid fa-file fa-2x w-100"></i>${filename}
+                            </a>`
+                            : `<span class="text-secondary">No File</span>`}
+                        </td>
+                        <td class="text-center">
+                            <a class="update-todo m-3" data-id="${todo.id}" type="button" data-bs-toggle="modal" data-bs-target="#staticBackdrop"><i class="fa-solid fa-pencil"></i></a>
+                            <a class="delete-todo" data-id="${todo.id}"><i class="fa-solid fa-trash"></i></a>
+                        </td>
+                    </tr>`)
+                })
+            } else {
+                $('tbody').append(`
+                <tr>
+                    <td class="text-center text-secondary py-3" colspan="6">No Record Found</td>
+                </tr>`)
+            }
+        }
+
+        // Show data
+        function showdata() {
+            $.ajax({
+                url: '/todo_data/',
+                success: function (data) {
+                    todolist(data)
+                },
+                error: function(){
+                    $('tbody').append(`
+                    <tr>
+                        <td class="text-center text-secondary py-3" colspan="6">No Record Found</td>
+                    </tr>`)
+                }
+            })
+        }
+        showdata()
+
+        // Get search data
+        $('input[type=search]').on("input", function () {
+            let query = $('input[type=search]').val()
+            $.ajax({
+                url: '/todo_data/',
+                type: 'GET',
+                data: { query: query },
+                success: function (data) {
+                    todolist(data)
+                },
+                error: function(){
+                    $('tbody').append(`
+                    <tr>
+                        <td class="text-center text-secondary py-3" colspan="6">No Record Found</td>
+                    </tr>`)
+                }
+            })
+        })
+
+        $("#addForm").submit(function (e) {
+            e.preventDefault()
+            let formdata = new FormData(this)
+            // Update data
+            if (formdata.get("id")) {
+                $.ajax({
+                    url: '/update_data/',
+                    type: 'POST',
+                    data: formdata,
+                    processData: false,
+                    contentType: false,
+                    success: function (res) {
+                        if (res.status == 0) {
+                            toastr.warning("Already Exists!")
+                        } else if (res.status == 1) {
+                            toastr.success("Todo updated successfully!")
+                            $("#addForm").trigger('reset');
+                            $(".btn-close").click()
+                            showdata()
+                        } else {
+                            toastr.error("Error updating Todo!")
+                        }
+                    },
+                    error: function (res) {
+                        toastr.error("Error updating Todo!")
+                    }
+                })
+                // Add data
+            } else {
+                $.ajax({
+                    url: '/add_data/',
+                    type: 'POST',
+                    data: formdata,
+                    processData: false,
+                    contentType: false,
+                    success: function (res) {
+                        if (res.status == 0) {
+                            toastr.warning("Already Exists!")
+                        } else if (res.status == 1) {
+                            toastr.success("Todo created successfully!")
+                            $("#addForm").trigger('reset');
+                            $(".btn-close").click()
+                            showdata()
+                        } else {
+                            toastr.error("Error creating Todo!")
+                        }
+                    },
+                    error: function () {
+                        toastr.error("Error creating Todo!")
+                    }
+                })
+            }
+        })
+
+        // Delete Data
+        $("tbody").on("click", ".delete-todo", function () {
+            let tid = $(this).data("id")
+            $.ajax({
+                url: '/del_data/',
+                type: 'POST',
+                data: { tid: tid },
+                success: function (res) {
+                    if (res.status == 1) {
+                        toastr.success("Todo deleted successfully!")
+                        showdata()
+                    } else {
+                        toastr.error("Error deleting Todo!")
+                    }
+                },
+                error: function () {
+                    toastr.error("Error deleting Todo!")
+                }
+            })
+        })
+
+        // Get edit Data
+        $("tbody").on("click", ".update-todo", function () {
+            let tid = $(this).data("id")
+            $.ajax({
+                url: '/edit_data/',
+                type: 'POST',
+                data: { tid: tid },
+                success: function (data) {
+                    if (data) {
+                        $(".modal-title").text("Update Todo")
+                        $("#addForm").find('input[name=id]').val(data.id)
+                        $("#addForm").find('input[name=name]').val(data.name)
+                        $("#addForm").find(data.status === "Done" ? '#radio1' : '#radio2').prop("checked", true)
+                        $("#addForm").find('select[name=type]').val(data.type)
+                        if (data.todo_img) {
+                            $("#addForm").find(".img").html(`
+                                <h6>Previous Image</h6>
+                                <a href="${data.todo_img}" target="_blank"><img src="${data.todo_img}" alt="Todo Image" height="100" width="100"></a>
+                            `)
+                        }
+                        if (data.file) {
+                            let filename = data.file.split('/').pop()
+                            $("#addForm").find(".file").html(`
+                                <h6>Previous File</h6>
+                                <a href="${data.file}" class="text-dark text-decoration-none" target="_blank">
+                                    <i class="fa-solid fa-file fa-2x"></i>
+                                    ${filename}
+                                </a>
+                            `)
+                        }
+                    }
+                }
+            })
+        })
+    })
+</script>

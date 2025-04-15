@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Django CRUD Tutorial{% endblock %}
+
+{% block content %}
+<div class="col-6 px-5">
+  <h3 class="text-center my-5">Create a New Account!</h3>
+  <form action="" method="post">
+    {% csrf_token %}
+    <label for="{{ registerform.username.id_for_label }}" class="form-label">Enter Username</label>
+    <!-- <input type="text" id="username" class="form-control mb-3" name="username" required> -->
+    {{registerform.username}}
+    {{ registerform.username.errors }}
+    <label class="form-label">Enter Password</label>
+    <div class="input-group mb-3">
+      <!-- <input type="password" id="password1" class="form-control mb-3" name="password1" required> -->
+      {{registerform.password1}}
+      <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-eye"></i></span>
+    </div>
+    {{ registerform.password.errors }}
+    <label class="form-label">Confirm Password</label>
+    <div class="input-group mb-3">
+      <!-- <input type="password" id="password2" class="form-control mb-3" name="password2" required> -->
+      {{registerform.password2}}
+      <span class="input-group-text" id="basic-addon2"><i class="fa-solid fa-eye"></i></span>
+    </div>
+    {{ registerform.password2.errors }}
+    <div class="text-center my-4">
+      <input type="submit" value="Register" class="btn btn-primary">
+    </div>
+  </form>
+  <p class="my-4">Already have an account <a href="/login/">Login Here</a></p>
+</div>
+<script>
+  const pass1 = document.getElementById("pass1");
+  document.getElementById('basic-addon1').addEventListener('click', function() {
+    if (pass1.type == 'password') {
+      pass1.type = 'text';
+    } else {
+      pass1.type = 'password';
+    }
+  });
+  const pass2 = document.getElementById("pass2");
+  document.getElementById('basic-addon2').addEventListener('click', function() {
+    if (pass2.type == 'password') {
+      pass2.type = 'text';
+    } else {
+      pass2.type = 'password';
+    }
+  });
+</script>
+{% endblock %}

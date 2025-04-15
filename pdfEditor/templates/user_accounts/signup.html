@@ -1,0 +1,91 @@
+{% extends 'user_accounts/base.html' %}
+
+{% block title %}PDF Editor - Sign Up{% endblock %}
+
+{% block content %}
+<div class="col-6 px-5">
+    <h3 class="text-center my-5">Create a New Account!</h3>
+    <form method="post">
+        <label for="first_name" class="form-label">Enter First Name</label>
+        <span style="color: red;">*</span>
+        <input type="text" id="first_name" class="form-control rounded-0 mb-3" name="first_name" required>
+        <label for="last_name" class="form-label">Enter Last Name</label>
+        <input type="text" id="last_name" class="form-control rounded-0 mb-3" name="last_name">
+        <label for="email" class="form-label">Enter Email</label>
+        <span style="color: red;">*</span>
+        <input type="email" id="email" class="form-control rounded-0 mb-3" name="email" required>
+        <label for="password" class="form-label">Enter Password</label>
+        <span style="color: red;">*</span>
+        <div class="input-group mb-3">
+            <input type="password" id="password" class="form-control rounded-0" name="password" required aria-describedby="basic-addon1">
+            <span class="input-group-text rounded-0" id="basic-addon1"><i class="bi bi-eye-fill"></i></span>
+        </div>
+        <label for="password2" class="form-label">Confirm Password</label>
+        <span style="color: red;">*</span>
+        <div class="input-group mb-3">
+            <input type="password" id="password2" class="form-control rounded-0" name="password2" required aria-describedby="basic-addon2">
+            <span class="input-group-text rounded-0" id="basic-addon2"><i class="bi bi-eye-fill"></i></span>
+        </div>
+        <div class="text-center my-4">
+            <input type="submit" value="Sign Up" class="btn btn-primary rounded-0">
+        </div>
+    </form>
+    <p class="my-4">Already have an account <a href="{% url 'login' %}">Login Here</a></p>
+</div>
+{% endblock %}
+{% block javascript %}
+<script>
+    let password = document.getElementById("password");
+    document.getElementById('basic-addon1').addEventListener('click', function() {
+        password.type = password.type == 'password' ? 'text' : 'password';
+        
+    });
+    let password2 = document.getElementById("password2");
+    document.getElementById('basic-addon2').addEventListener('click', function() {
+        password2.type = password2.type == 'password' ? 'text' : 'password';
+    });
+    // Sign Up
+    $(document).ready(function () {  
+        $('form').on('submit', function (e) {
+            e.preventDefault();
+            var emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+            var passwordRegex = /^(?=\S{8,}$)\S+$/;
+
+            let first_name = $("#first_name").val().trim();
+            let last_name = $("#last_name").val().trim();
+            let email = $("#email").val().trim();
+            let password = $("#password").val();
+            let password2 = $("#password2").val();
+            if(email == "" || !emailRegex.test(email)){
+                toastr.warning("Please enter a valid email address!")
+            }else if(!passwordRegex.test(password)){
+                toastr.warning("Password should contain at least 8 characters and without any spaces!")
+            }else if(password != password2){
+                toastr.warning("Passwords do not match!")
+            }else{
+                $.ajax({
+                    url: 'signup',
+                    type: 'POST',
+                    data: {first_name : first_name,
+                        last_name : last_name,
+                        email : email,
+                        password : password,
+                        password2 : password2,
+                    },
+                    success: function (res) {
+                        if (res.status == 200) {
+                            window.location.assign("{% url 'index' %}");
+                        }else if(res.status == false) {
+                            toastr.warning(res.msg);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        toastr.error("Error Creating User!");
+                        console.error(xhr, status, error);
+                    }
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

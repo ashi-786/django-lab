@@ -1,0 +1,225 @@
+{% extends 'user_dashboard/base.html' %}
+{% load static %}
+{% block title %}Dashboard - Library{% endblock %}
+{% block content %}
+<h3>PDF Files Library</h3>
+
+<div class="mt-3">
+    <!-- <h6>Upload a PDF</h6> -->
+    <form enctype="multipart/form-data">
+        <div class="dropzone dropzone-single" id="my-dropzone" data-toggle="dropzone">
+            <div class="fallback">
+                <input type="file" class="form-control rounded-0" name="pdf_file" accept=".pdf" required>
+            </div>
+        </div>
+        <div class="my-2 text-center">
+            <input type="submit" class="btn btn-primary rounded-0 mx-2" value="Upload" disabled>
+        </div>
+    </form>
+</div>
+<div class="mt-4 mb-3 d-flex justify-content-end" style="width: 70%;">
+    <input class="form-control rounded-0" type="search" name="pdf_query" placeholder="Search...">
+</div>
+<table class="table table-hover" id="file-list">
+    <thead>
+        <tr>
+            <th>Filename</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+{% endblock %}
+{% block javascript %}
+<script>
+    Dropzone.autoDiscover = false;
+
+    $(document).ready(function () {
+        // Upload pdf
+        $("#my-dropzone").dropzone({
+            paramName: "pdf_file",
+            acceptedFiles: ".pdf",
+            maxFiles: 1,
+            addRemoveLinks: true,
+            autoProcessQueue: false,
+            dictDefaultMessage: `<img src="{% static 'img/blank-file-icon.png' %}" height="50px" width="50px"><p>Drop your PDF file here or click to upload</p>`,
+            dictRemoveFile: "<i class='bi bi-trash me-1'></i> Remove",
+            dictMaxFilesExceeded: "You can only upload one PDF file.",
+            url: 'upload_pdf', // (if not using fallback)
+            init: function () {
+                const dzInstance = this;
+                this.on("addedfile", file => {
+                    $(file.previewElement).find('.dz-progress').css('display', 'none');
+                    if ($('.dz-preview').length == 1) {
+                        $('input[type=submit]').prop('disabled', false);
+                    } else {
+                        $('input[type=submit]').prop('disabled', true);
+                    }
+                });
+                this.on("removedfile", file => {
+                    if ($('.dz-preview').length == 1) {
+                        $('input[type=submit]').prop('disabled', false);
+                    } else {
+                        $('input[type=submit]').prop('disabled', true);
+                    }
+                });
+                // Upload PDF
+                $('form').on('submit', function (e) {
+                    e.preventDefault();
+                    const formdata = new FormData(this);
+
+                    if (dzInstance.files.length > 0) {
+                        formdata.append(dzInstance.options.paramName, dzInstance.files[0]);
+                    } else {
+                        const fallbackInput = $('input[type="file"][name="pdf_file"]')[0];
+                        if (fallbackInput.files.length > 0) {
+                            formdata.append('pdf_file', fallbackInput.files[0]);
+                        }
+                    }
+
+                    $.ajax({
+                        url: 'upload_pdf',
+                        type: 'POST',
+                        data: formdata,
+                        processData: false,
+                        contentType: false,
+                        success: function (res) {
+                            if (res.status == false) {
+                                toastr.warning(res.msg);
+                            } else if (res.status == 200) {
+                                toastr.success(res.msg);
+                                dzInstance.removeAllFiles();
+                                $('input[type=submit]').prop('disabled', true);
+                                showpdfdata();
+                            } else {
+                                toastr.error("Error uploading PDF!");
+                                console.log(res.msg);
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            toastr.error("Error uploading PDF!");
+                            console.error(xhr, status, error);
+                        }
+                    });
+                });
+            }
+        });
+
+        // Create File list
+        function filelist(data){
+            $('#file-list').find("tbody").empty();
+            if (data.length > 0) {
+                data.forEach(file => {
+                    let filename = file.html_file.split(/[\\/]/).pop().split('.')[0];
+                    $('#file-list').find("tbody").append(
+                        `<tr>
+                        <td>${filename}
+                            <!-- <a href="\media\\${file.html_file}" target="_blank" class="text-dark text-decoration-none"></a> -->
+                        </td>
+                        <td>
+                            <a class="download-pdf" data-id="${file.id}" type="button" data-bs-toggle="tooltip" title="Download" download><i class="bi bi-download"></i></a>
+                            <a class="update-file" href="{% url 'file_editor'%}?file_id=${file.id}" data-bs-toggle="tooltip" title="Edit"><i class="bi bi-pencil-square"></i></a>
+                            <a class="delete-file" data-id="${file.id}" type="button" data-bs-toggle="tooltip" title="Delete"><i class="bi bi-trash3"></i></a>
+                        </td>
+                    </tr>`);
+                })
+            } else {
+                $('#file-list').find("tbody").append(`
+                    <tr>
+                        <td class="text-center  text-secondary py-3" colspan="2">No Record Found</td>
+                    </tr>`);
+            }
+        }
+
+        // Show pdf data
+        function showpdfdata() {
+            $.ajax({
+                url: 'files_data',
+                success: function (data) {
+                    // console.log(data)
+                    filelist(data);
+                },
+                error: function () {
+                    $('#file-list').find("tbody").append(`
+                    <tr>
+                        <td class="text-center  text-secondary py-3" colspan="2">No Record Found</td>
+                    </tr>`);
+                }
+            });
+        }
+        showpdfdata();
+
+        // Search files
+        $('input[name=pdf_query]').on("input", function () {
+            let query = $('input[name=pdf_query]').val();
+            $.ajax({
+                url: 'files_data',
+                type: 'GET',
+                data: { query: query },
+                success: function (data) {
+                    filelist(data);
+                },
+                error: function(){
+                    $('#file-list').find("tbody").append(`
+                    <tr>
+                        <td class="text-center  text-secondary py-3" colspan="2">No Record Found</td>
+                    </tr>`);
+                }
+            });
+        });
+
+        // Delete Files
+        $("#file-list").on("click", ".delete-file", function () {
+            let file_id = $(this).data("id");
+            $.ajax({
+                url: 'del_data',
+                type: 'POST',
+                data: { file_id: file_id },
+                success: function (res) {
+                    if (res.status == 200) {
+                        toastr.success(res.msg);
+                        showpdfdata();
+                    } else {
+                        toastr.error("Error deleting Pdf!");
+                    }
+                },
+                error: function (xhr, status, error) {
+                    toastr.error("Error deleting Pdf!");
+                    console.error(xhr, status, error);
+                }
+            });
+        });
+
+        // Download PDF
+        $("#file-list").on("click", ".download-pdf", function (e) {
+            // e.preventDefault()
+            const fileId = $(this).data('id');
+            $.ajax({
+                url: 'download_pdf',
+                method: 'GET',
+                data: { 'file_id': fileId },
+                xhrFields: { // console error if file not found
+                    responseType: 'blob', // Important: Expect a binary blob as the response
+                },
+                success: function(res, status, xhr) {
+                    let filename = xhr.getResponseHeader('Content-Disposition').split('filename=')[1];
+                    filename = filename.replace(/^"(.*)"$/, '$1').trim(); // Remove surrounding quotes
+
+                    const link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(res);
+                    link.download = filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    window.URL.revokeObjectURL(link.href);
+                },
+                error: function(xhr, status, error) {
+                    toastr.error('Error downloading PDF!');
+                    console.error(xhr, status, error);
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

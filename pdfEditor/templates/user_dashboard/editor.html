@@ -1,0 +1,187 @@
+{% load django_bootstrap5 %}
+{% load static %}
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Dashboard - Editor</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    {% bootstrap_css %}
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'ckeditor5/ckeditor5.css' %}">
+</head>
+
+<body>
+	<div id="loader">
+        <div class="loader-spinner"></div>
+    </div>
+    <main class="container-fluid" style="display: none;">
+        <div class="row justify-content-center align-items-center">
+            <div class="col-11 my-2">
+				<div class="mb-2">
+					<a href="{% url 'index' %}" class="btn btn-secondary rounded-0">Go Back</a>
+				</div>
+				<div class="mb-2">
+					<form id="filename" class="d-flex">
+						<input type="hidden" name="file_id" value="{{file_id}}">
+						<input type="text" class="form-control rounded-0" name="html_file" value="{{filename}}" style="width: 300px;">
+						<input type="submit" class="btn btn-primary rounded-0 mx-2" value="Save" disabled>
+					</form>
+				</div>
+                <form id="contentForm" enctype="multipart/form-data">
+					<input type="hidden" name="file_id" value="{{file_id}}">
+                    <textarea id="editor" name="html_content" data-id="{{file_id}}">
+                        {{html_content}}
+                    </textarea>
+                    <div class="mt-2 text-end">
+                        <input type="submit" class="btn btn-primary rounded-0" value="Save">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+    {% bootstrap_javascript %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+	<!-- Ajax -->
+    <script>
+		$(document).ready(function () {
+			toastr.options = {
+				"closeButton": false,
+				"debug": false,
+				"newestOnTop": false,
+				"progressBar": false,
+				"positionClass": "toast-top-right",
+				"preventDuplicates": true,
+				"onclick": null,
+				"showDuration": "300",
+				"hideDuration": "1000",
+				"timeOut": "5000",
+				"extendedTimeOut": "1000",
+				"showEasing": "swing",
+				"hideEasing": "linear",
+				"showMethod": "fadeIn",
+				"hideMethod": "fadeOut",
+			};
+
+			// Update html file
+			$('#contentForm').on('submit', function (e) {
+				e.preventDefault();
+
+				let formdata = new FormData(this);
+				$.ajax({
+					url: 'update_data',
+					type: 'POST',
+					data: formdata,
+					processData: false,
+        			contentType: false,
+					success: function (res) {
+						if (res.status == 200) {
+							toastr.success(res.msg);
+						}
+					},
+					error: function (xhr, status, error) {
+						toastr.error("Error Updating PDF!");
+						console.error(xhr, status, error);
+					}
+				});
+			});
+
+			$('input[name=html_file]').on("input", function () {
+				$('#filename').find('input[type=submit]').prop('disabled', false);
+        	});
+
+			// Rename File
+			$('#filename').on('submit', function (e) {
+				e.preventDefault();
+
+				let file_id = $('#filename').find('input[name=file_id]').val();
+				let html_file = $('input[name=html_file').val().trim();
+				if(html_file !== '' && html_file !== '_'){
+					$.ajax({
+						url: 'rename_pdf',
+						type: 'POST',
+						data: {file_id: file_id,
+							html_file: html_file},
+						success: function (res) {
+							if (res.status == 200) {
+								toastr.success(res.msg);
+								$('#filename').find('input[type=submit]').prop('disabled', true);
+							} else if(res.status == false) {
+								toastr.warning(res.msg);
+							}
+						},
+						error: function (xhr, status, error) {
+							toastr.error("Error Renaming File!");
+							console.error(xhr, status, error);
+						}
+					});
+				}
+			});
+
+			$('#loader').hide();
+            $('.container-fluid').show();
+		});
+    </script>
+    <script type="importmap">
+        {
+            "imports": {
+                "ckeditor5": "{% static 'ckeditor5/ckeditor5.js' %}",
+				"ckeditor5/": "{% static 'ckeditor5/' %}"
+			}
+		}
+	</script>
+    <!-- CKEditor5 -->
+    <script type="module">
+        import {
+			Autoformat, BlockQuote, Bold, ClassicEditor, CloudServices, Essentials, Font, Heading, Image, ImageCaption, ImageResize, ImageStyle, ImageToolbar, ImageUpload, Base64UploadAdapter, Indent, IndentBlock, Italic, Link, List, MediaEmbed, Mention, Paragraph, PasteFromOffice, PictureEditing, Table, TableColumnResize, TableToolbar, TextTransformation, Underline,
+		} from 'ckeditor5';
+        
+        ClassicEditor.create(document.querySelector('#editor'), {
+			licenseKey: 'GPL',
+			plugins: [
+				Autoformat, BlockQuote, Bold, CloudServices, Essentials, Font, Heading, Image, ImageCaption, ImageResize, ImageStyle, ImageToolbar, ImageUpload, Base64UploadAdapter, Indent, IndentBlock, Italic, Link, List, MediaEmbed, Mention, Paragraph, PasteFromOffice, PictureEditing, Table, TableColumnResize, TableToolbar, TextTransformation, Underline,
+			],
+			toolbar: [
+				'undo', 'redo', '|', 'heading', '|', 'bold', 'italic', '|', 'fontSize', 'fontFamily', 'fontColor', 'fontBackgroundColor', 'underline', '|', 'link', 'uploadImage', 'insertTable', 'blockQuote', 'mediaEmbed', '|', 'bulletedList', 'numberedList', '|', 'outdent', 'indent',
+			],
+			heading: {
+				options: [
+					{ model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+					{ model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
+					{ model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
+					{ model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' },
+					{ model: 'heading4', view: 'h4', title: 'Heading 4', class: 'ck-heading_heading4' },
+				]
+			},
+			image: {
+				resizeOptions: [
+					{ name: 'resizeImage:original', label: 'Default image width', value: null },
+					{ name: 'resizeImage:50', label: '50% page width', value: '50' },
+					{ name: 'resizeImage:75', label: '75% page width', value: '75' },
+				],
+				toolbar: [
+					'imageTextAlternative', 'toggleImageCaption', '|', 'imageStyle:inline', 'imageStyle:wrapText', 'imageStyle:breakText', '|', 'resizeImage',
+				]
+			},
+			link: {
+				addTargetToExternalLinks: true,
+				defaultProtocol: 'https://',
+			},
+			table: {
+				contentToolbar: ['tableColumn', 'tableRow', 'mergeTableCells'],
+			},
+		})
+		.then(editor => {
+			window.editor = editor;
+		})
+		.catch(error => {
+			console.error(error);
+		});
+    </script>
+</body>
+
+</html>

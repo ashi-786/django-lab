@@ -1,0 +1,13 @@
+.col-8, .navbar{
+    background-color: #f4f4f4;
+}
+.table td {
+    min-width: 150px;
+}
+a .fa-solid{
+    color: #5e5e5e;
+}
+a .fa-solid:hover{
+    color: #1b1b1b;
+    cursor: pointer;
+}

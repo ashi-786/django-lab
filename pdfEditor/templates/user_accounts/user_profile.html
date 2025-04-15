@@ -1,0 +1,77 @@
+{% extends 'user_dashboard/base.html' %}
+{% load static %}
+{% block title %}Dashboard - My Account{% endblock %}
+{% block content %}
+
+<h3>My Account</h3>
+<form method="post" enctype="multipart/form-data">
+    <div class="row mt-5" style="background-color: none;">
+        {% if user %}
+        <div class="col-6">
+            <label for="first_name" class="form-label">First Name</label>
+            <input type="text" id="first_name" class="form-control mb-3 rounded-0 w-50" name="first_name" required value="{{ user.first_name }}">
+            <label for="last_name" class="form-label">Last Name</label>
+            <input type="text" id="last_name" class="form-control mb-3 rounded-0 w-50" name="last_name" value="{{ user.last_name }}">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" id="email" class="form-control mb-3 rounded-0 w-50" name="email" required disabled value="{{ user.email }}">
+        </div>
+        <div class="col-6">
+            <p>Profile Picture</p>
+            {% if user.ppic %}
+            <img id="ppic-display" src="/media/{{ user.ppic }}" width="100px" height="100px" style="cursor: pointer;">
+            {% else %}
+            <img id="ppic-display" src="{% static 'img/blank_user_add.jpeg' %}" width="100px" height="100px" style="cursor: pointer;">
+            {% endif %}
+            <input type="file" name="ppic" id="ppic" accept="image/*" style="display: none;">
+        </div>
+        {% endif %}
+    </div>
+    <div class="my-4">
+        <input type="submit" value="Save" class="btn btn-primary rounded-0">
+    </div>
+</form>
+{% endblock %}
+{% block javascript %}
+<script>
+    $(document).ready(function () {
+        $("#ppic-display").click( function() {
+            $("#ppic").click();
+        });
+
+        $("#ppic").on('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    $("#ppic-display").attr('src', e.target.result); // Set the image source using jQuery
+                }
+                reader.readAsDataURL(file); // Read the file as a data URL
+            }
+        });
+
+        // Update user data
+        $('form').on('submit', function (e) {
+            e.preventDefault();
+
+            let formdata = new FormData(this);
+            $.ajax({
+                url: 'my_account',
+                type: 'POST',
+                data: formdata,
+                processData: false,
+                contentType: false,
+                success: function (res) {
+                    if (res.status == 200) {
+                        toastr.success(res.msg);
+                        location.reload();
+                    }
+                },
+                error: function (xhr, status, error) {
+                    toastr.error("Error Updating User!");
+                    console.error(xhr, status, error);
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends 'user_dashboard/base.html' %}
+{% block title %}Dashboard - History{% endblock %}
+{% block content %}
+<h3>History</h3>
+
+<div class="my-3 d-flex justify-content-end">
+    <input class="form-control rounded-0" type="search" name="history_query" placeholder="Search...">
+</div>
+<table class="table table-hover" id="history-list">
+    <thead>
+        <tr>
+            <th>Filename</th>
+            <th>Status</th>
+            <th>Updated at</th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+{% endblock %}
+{% block javascript %}
+<script>
+    $(document).ready(function () {
+        // Create History List
+        function historylist(data){
+            $('#history-list').find("tbody").empty();
+            if (data.length > 0) {
+                data.forEach(history => {
+                    let updated_at = new Date(history.updated_at).toLocaleString();
+                    $('#history-list').find("tbody").append(
+                        `<tr>
+                        <td>${history.html_file}</td>
+                        <td>${history.status}</td>
+                        <td>${updated_at}</td>
+                    </tr>`);
+                })
+            } else {
+                $('#history-list').find("tbody").append(`
+                <tr>
+                    <td class="text-center  text-secondary py-3" colspan="3">No Record Found</td>
+                </tr>`);
+            }
+        }
+
+        // Show history data
+        function showhistory() {
+            $.ajax({
+                url: 'history_data',
+                success: function (data) {
+                    // console.log(data)
+                    historylist(data);
+                },
+                error: function () {
+                    $('#history-list').find("tbody").append(`
+                    <tr>
+                        <td class="text-center  text-secondary py-3" colspan="3">No Record Found</td>
+                    </tr>`);
+                }
+            });
+        }
+        showhistory();
+
+        // Search history
+        $('input[name=history_query]').on("input", function () {
+            let query = $('input[name=history_query]').val();
+            $.ajax({
+                url: 'history_data',
+                type: 'GET',
+                data: { query: query },
+                success: function (data) {
+                    historylist(data);
+                },
+                error: function(){
+                    $('#file-list').find("tbody").append(`
+                    <tr>
+                        <td class="text-center  text-secondary py-3" colspan="3">No Record Found</td>
+                    </tr>`);
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
